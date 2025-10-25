@@ -20,7 +20,6 @@ namespace Paint
 
     class Circle : Shape
     {
-
         public Circle(Point start, Point end)
         {
             TopLeftPoint = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));

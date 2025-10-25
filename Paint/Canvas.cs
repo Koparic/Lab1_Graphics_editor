@@ -28,9 +28,19 @@ namespace Paint
         };
 
         private ActiveShapeType activeShape = ActiveShapeType.None;
+        private Brush curBrush = Brushes.Black;
+        private Pen curPen = Pens.Black;
         public void ChooseShape(ActiveShapeType type)
         {
             activeShape = type;
+        }
+        public void ChooseInColor(Color c)
+        {
+            curBrush = new SolidBrush(c);
+        }
+        public void ChooseOutColor(Color c)
+        {
+            curPen = new Pen(c);
         }
 
         public CustomCanvas()
@@ -40,7 +50,6 @@ namespace Paint
             BackColor = Color.White;
         }
 
-
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -48,6 +57,10 @@ namespace Paint
             foreach (var shape in shapes)
             {
                 shape.Draw(g);
+            }
+            if (isDrawing)
+            {
+                curShape.Draw(g);
             }
         }
 
@@ -57,17 +70,18 @@ namespace Paint
             if (e.Button == MouseButtons.Left)
             {
                 start = e.Location;
-                isDrawing = true;
+                isDrawing = activeShape!=ActiveShapeType.None;
             }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            end = e.Location;
             if (isDrawing)
             {
-                end = e.Location;
                 CreateShape(start, end, activeShape);
+                AddNewShape();
             }
         }
 
@@ -78,13 +92,20 @@ namespace Paint
             { 
                 end = e.Location;
                 CreateShape(start, end, activeShape);
-                AddNewShape();
+                isDrawing = false;
+                if ((end.X - start.X) * (end.X - start.X) + (end.Y - start.Y) * (end.Y - start.Y) >= 5)
+                {
+                    AddNewShape();
+                }
             }
         }
 
         private void AddNewShape()
         {
-            shapes.Add(curShape);
+            if (!isDrawing)
+            {
+                shapes.Add(curShape);
+            }
             Invalidate();
         }
 
@@ -104,6 +125,8 @@ namespace Paint
                 default:
                     break;
             }
+            curShape.FillBrush = curBrush;
+            curShape.OutlinePen = curPen;
         }
 
         private void MoveSelectedShape(Point currentLocation)

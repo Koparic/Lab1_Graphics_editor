@@ -2,11 +2,20 @@ namespace Paint
 {
     public partial class Form1 : Form
     {
-        ToolStrip ts = new ToolStrip();
+        private ToolStrip ts = new ToolStrip();
+        private CustomCanvas customCanvas = new CustomCanvas();
+
+        private ToolStripButton inColorPickerBtn;
+        private ToolStripButton outColorPickerBtn;
         private ToolStripButton btnCircle;
         private ToolStripButton btnRectangle;
         private ToolStripButton btnLine;
-        CustomCanvas customCanvas = new CustomCanvas();
+
+        private Color currentInColor = Color.Black;
+        private Color currentOutColor = Color.Black;
+        private Color[] colors = new Color[] {
+                Color.Red, Color.Blue, Color.Green, Color.Black, Color.White,
+                Color.Yellow, Color.Purple, Color.Gray, Color.Silver, Color.Brown};
 
         public Form1()
         {
@@ -29,6 +38,15 @@ namespace Paint
             btnLine = new ToolStripButton("Линия");
             btnLine.Click += BtnLine_Click;
             ts.Items.Add(btnLine);
+
+            inColorPickerBtn = new ToolStripButton(GetColorSample(currentInColor));
+            inColorPickerBtn.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            inColorPickerBtn.Click += (s, e) => ShowPalette(inColorPickerBtn, ref currentInColor);
+            ts.Items.Add(inColorPickerBtn);
+            outColorPickerBtn = new ToolStripButton(GetColorSample(currentOutColor));
+            outColorPickerBtn.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            outColorPickerBtn.Click += (s, e) => ShowPalette(outColorPickerBtn, ref currentOutColor);
+            ts.Items.Add(outColorPickerBtn);
 
             Controls.Add(ts);
         }
@@ -58,6 +76,51 @@ namespace Paint
             BtnUpdate();
             btnLine.Checked = true;
         }
+
+        private void ShowPalette(ToolStripButton button, ref Color targetColor)
+        {
+            ContextMenuStrip palette = new ContextMenuStrip();
+
+            foreach (var color in colors)
+            {
+                ToolStripMenuItem item = new ToolStripMenuItem("", null, Item_Click);
+                item.ImageScaling = ToolStripItemImageScaling.None;
+                item.Image = GetColorSample(color);
+                item.Tag = Tuple.Create(button, color);
+                palette.Items.Add(item);
+            }
+            palette.Show(button.Bounds.Left, button.Bounds.Bottom);
+        }
+        private void Item_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem clickedItem = (ToolStripMenuItem)sender;
+            var tuple = (Tuple<ToolStripButton, Color>)clickedItem.Tag;
+            ToolStripButton button = tuple.Item1;
+            Color selectedColor = tuple.Item2;
+
+            if (button == inColorPickerBtn)
+            {
+                currentInColor = selectedColor;
+                customCanvas.ChooseInColor(selectedColor);
+            }
+            else if (button == outColorPickerBtn)
+            {
+                currentOutColor = selectedColor;
+                customCanvas.ChooseOutColor(selectedColor);
+            }
+
+            button.Image = GetColorSample(selectedColor);
+        }
+        private Image GetColorSample(Color color)
+        {
+            Bitmap bmp = new Bitmap(16, 16);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.Clear(color);
+            }
+            return bmp;
+        }
+
 
         void BtnUpdate()
         {
