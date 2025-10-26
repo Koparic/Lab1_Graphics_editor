@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace Paint
 {
     public partial class Form1 : Form
@@ -26,6 +28,17 @@ namespace Paint
             customCanvas.Dock = DockStyle.Fill; 
             customCanvas.BackColor = Color.White;
             Controls.Add(customCanvas);
+
+            string filePath = "picture.json";
+            if (File.Exists(filePath))
+            {
+                using (StreamReader reader = File.OpenText(filePath))
+                {
+                    string json = reader.ReadToEnd();
+                    customCanvas.LoadShapes(JsonConvert.DeserializeObject<List<Shape>>(json));
+                }
+            }
+
 
             infoPanel.Dock = DockStyle.Right;
             infoPanel.ShapeRemoved += InfoPanel_ShapeRemoved;
@@ -61,10 +74,15 @@ namespace Paint
 
             Controls.Add(ts);
         }
-
-        private void Form1_Load(object sender, EventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-
+            base.OnFormClosing(e);
+            string filePath = "picture.json";
+            using (StreamWriter writer = File.CreateText(filePath))
+            {
+                string json = JsonConvert.SerializeObject(customCanvas.SaveShapes(), Newtonsoft.Json.Formatting.Indented);
+                writer.Write(json);
+            }
         }
 
         void BtnCircle_Click(object sender, EventArgs e)

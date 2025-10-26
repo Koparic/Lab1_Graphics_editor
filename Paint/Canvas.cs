@@ -57,6 +57,17 @@ namespace Paint
             SetStyle(ControlStyles.ResizeRedraw | ControlStyles.AllPaintingInWmPaint, true);
             BackColor = Color.White;
         }
+        public void LoadShapes(List<Shape> s)
+        {
+            if (s != null)
+            {
+                shapes = s;
+            }
+        }
+        public List<Shape> SaveShapes()
+        {
+            return shapes;
+        }
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -187,9 +198,12 @@ namespace Paint
 
         public void RemoveShape()
         {
-            shapes.RemoveAt(selectedShapeInd);
-            selectedShapeInd = -1;
-            Invalidate();
+            if (selectedShapeInd > -1)
+            {
+                shapes.RemoveAt(selectedShapeInd);
+                selectedShapeInd = -1;
+                Invalidate();
+            }
         }
 
         public void ChangeShapeLayer(bool up)
