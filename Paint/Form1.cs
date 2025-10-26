@@ -3,7 +3,8 @@ namespace Paint
     public partial class Form1 : Form
     {
         private ToolStrip ts = new ToolStrip();
-        private CustomCanvas customCanvas = new CustomCanvas();
+        private CustomCanvas customCanvas;
+        private ShapeInfoPanel infoPanel = new ShapeInfoPanel();
 
         private ToolStripButton inColorPickerBtn;
         private ToolStripButton outColorPickerBtn;
@@ -21,9 +22,15 @@ namespace Paint
         {
             InitializeComponent();
 
+            customCanvas = new CustomCanvas(this);
             customCanvas.Dock = DockStyle.Fill; 
             customCanvas.BackColor = Color.White;
             Controls.Add(customCanvas);
+
+            infoPanel.Dock = DockStyle.Right;
+            infoPanel.ShapeRemoved += InfoPanel_ShapeRemoved;
+            infoPanel.ShapeLevelChanged += InfoPanel_ShapeLevelChanged;
+            Controls.Add(infoPanel);
 
             ts.Dock = DockStyle.Top;
 
@@ -68,7 +75,6 @@ namespace Paint
             BtnUpdate();
             btnCircle.Checked = true;
         }
-
         void BtnRectangle_Click(object sender, EventArgs e)
         {
             ColorUpldate();
@@ -77,7 +83,6 @@ namespace Paint
             BtnUpdate();
             btnRectangle.Checked = true;
         }
-
         void BtnLine_Click(object sender, EventArgs e)
         {
             ColorUpldate();
@@ -86,14 +91,12 @@ namespace Paint
             BtnUpdate();
             btnLine.Checked = true;
         }
-
         void BtnMove_Click(object sender, EventArgs e)
         {
             customCanvas.SetMoving(true);
             BtnUpdate();
             btnMove.Checked = true;
         }
-
         private void ShowPalette(ToolStripButton button, ref Color targetColor)
         {
             ContextMenuStrip palette = new ContextMenuStrip();
@@ -135,14 +138,11 @@ namespace Paint
             }
             return bmp;
         }
-
-
         private void ColorUpldate()
         {
             customCanvas.ChooseInColor(currentInColor);
             customCanvas.ChooseOutColor(currentOutColor);
         }
-
         void BtnUpdate()
         {
             foreach (ToolStripButton bttn in ts.Items)
@@ -150,6 +150,17 @@ namespace Paint
                 bttn.Checked = false;
             }
         }
-
+        private void InfoPanel_ShapeRemoved(bool a)
+        {
+            customCanvas.RemoveShape();
+        }
+        private void InfoPanel_ShapeLevelChanged(bool up)
+        {
+            customCanvas.ChangeShapeLayer(up);
+        }
+        public void SetSelectedShape(Shape shape)
+        {
+            infoPanel.SetSelectedShape(shape);
+        }
     }
 }

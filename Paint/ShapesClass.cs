@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Paint
 {
-    abstract class Shape
+    public abstract class Shape
     {
         public Point TopLeftPoint { get; set; }
         public Point BottomRightPoint { get; set; }
@@ -50,8 +50,6 @@ namespace Paint
 
     class Rectangle : Shape
     {
-        public Size Size { get; set; }
-
         public Rectangle(Point start, Point end)
         {
             TopLeftPoint = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
@@ -75,8 +73,6 @@ namespace Paint
     
     class Line : Shape
     {
-        public Size Size { get; set; }
-
         public Line(Point start, Point end)
         {
             TopLeftPoint = start;

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
+using System.Windows.Forms;
 
 
 namespace Paint
 {
-    using System.Drawing;
-    using System.Windows.Forms;
-  
     public class CustomCanvas : Panel
     {
         private List<Shape> shapes = new List<Shape>();
@@ -20,6 +19,7 @@ namespace Paint
         private bool isDrawing = false;
         private bool isMoving = false;
         private bool isDraging = false;
+        private Form1 form1;
 
         public enum ActiveShapeType
         {
@@ -50,8 +50,9 @@ namespace Paint
             isMoving = b;
         }
 
-        public CustomCanvas()
+        public CustomCanvas(Form1 form)
         {
+            form1 = form;
             DoubleBuffered = true;
             SetStyle(ControlStyles.ResizeRedraw | ControlStyles.AllPaintingInWmPaint, true);
             BackColor = Color.White;
@@ -65,7 +66,7 @@ namespace Paint
             {
                 shape.Draw(g);
             }
-            if (isDrawing || (isMoving && selectedShapeInd >= 0))
+            if (isDrawing || (isMoving && selectedShapeInd > -1))
             {
                 curShape.Draw(g);
             }
@@ -98,7 +99,8 @@ namespace Paint
             }
             else if (isDraging && selectedShapeInd > -1)
             {
-                Point tlp = shapes[selectedShapeInd].TopLeftPoint, brp = shapes[selectedShapeInd].BottomRightPoint;
+                Point tlp = new Point(Math.Min(shapes[selectedShapeInd].TopLeftPoint.X, shapes[selectedShapeInd].BottomRightPoint.X), Math.Min(shapes[selectedShapeInd].TopLeftPoint.Y, shapes[selectedShapeInd].BottomRightPoint.Y));
+                Point brp = new Point(Math.Max(shapes[selectedShapeInd].TopLeftPoint.X, shapes[selectedShapeInd].BottomRightPoint.X), Math.Max(shapes[selectedShapeInd].TopLeftPoint.Y, shapes[selectedShapeInd].BottomRightPoint.Y));
                 tlp.Offset(end.X - start.X, end.Y - start.Y); brp.Offset(end.X - start.X, end.Y - start.Y);
                 curShape.TopLeftPoint = tlp;
                 curShape.BottomRightPoint = brp;
@@ -126,6 +128,7 @@ namespace Paint
                 tlp.Offset(end.X - start.X, end.Y - start.Y); brp.Offset(end.X - start.X, end.Y - start.Y);
                 shapes[selectedShapeInd].TopLeftPoint = tlp;
                 shapes[selectedShapeInd].BottomRightPoint = brp;
+                form1.SetSelectedShape(shapes[selectedShapeInd]);
                 Invalidate();
             }
         }
@@ -157,22 +160,49 @@ namespace Paint
             }
             curShape.FillBrush = curBrush;
             curShape.OutlinePen = curPen;
+            form1.SetSelectedShape(curShape);
         }
 
 
         private void SelectShape(Point point)
         {
-            for (int i = 0; i < shapes.Count; i++)
+            for (int i = shapes.Count-1; i > -1; i--)
             {
                 if (shapes[i].ContainsPoint(point))
                 {
                     selectedShapeInd = i;
+                    form1.SetSelectedShape(shapes[i]);
                     curShape = new Rectangle(shapes[i].TopLeftPoint, shapes[i].BottomRightPoint);
                     curBrush = new SolidBrush(Color.Transparent);
                     curPen = new Pen(Color.DarkGray, 5);
                     curPen.DashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
                     curShape.FillBrush = curBrush;
                     curShape.OutlinePen = curPen;
+                    return;
+                }
+            }
+            selectedShapeInd = -1;
+        }
+
+
+        public void RemoveShape()
+        {
+            shapes.RemoveAt(selectedShapeInd);
+            selectedShapeInd = -1;
+            Invalidate();
+        }
+
+        public void ChangeShapeLayer(bool up)
+        {
+            if (selectedShapeInd > -1){
+            int index2 = selectedShapeInd + (up ? 1 : -1);
+                if (index2 > -1 && index2 < shapes.Count)
+                {
+                    Shape temp = shapes[selectedShapeInd];
+                    shapes[selectedShapeInd] = shapes[index2];
+                    shapes[index2] = temp;
+                    selectedShapeInd = index2;
+                    Invalidate();
                 }
             }
         }
