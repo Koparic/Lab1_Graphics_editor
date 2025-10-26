@@ -10,14 +10,16 @@ namespace Paint
     using System.Drawing;
     using System.Windows.Forms;
   
-
     public class CustomCanvas : Panel
     {
         private List<Shape> shapes = new List<Shape>();
         private Shape curShape;
+        private int selectedShapeInd = -1;
         private Point start;
         private Point end;
         private bool isDrawing = false;
+        private bool isMoving = false;
+        private bool isDraging = false;
 
         public enum ActiveShapeType
         {
@@ -32,6 +34,7 @@ namespace Paint
         private Pen curPen = Pens.Black;
         public void ChooseShape(ActiveShapeType type)
         {
+            selectedShapeInd = -1;
             activeShape = type;
         }
         public void ChooseInColor(Color c)
@@ -41,6 +44,10 @@ namespace Paint
         public void ChooseOutColor(Color c)
         {
             curPen = new Pen(c);
+        }
+        public void SetMoving(bool b)
+        {
+            isMoving = b;
         }
 
         public CustomCanvas()
@@ -58,7 +65,7 @@ namespace Paint
             {
                 shape.Draw(g);
             }
-            if (isDrawing)
+            if (isDrawing || (isMoving && selectedShapeInd >= 0))
             {
                 curShape.Draw(g);
             }
@@ -70,7 +77,13 @@ namespace Paint
             if (e.Button == MouseButtons.Left)
             {
                 start = e.Location;
-                isDrawing = activeShape!=ActiveShapeType.None;
+                if (isMoving)
+                {
+                    SelectShape(start);
+                    isDraging = true;
+                    Invalidate();
+                }
+                else isDrawing = activeShape != ActiveShapeType.None;
             }
         }
 
@@ -82,6 +95,14 @@ namespace Paint
             {
                 CreateShape(start, end, activeShape);
                 AddNewShape();
+            }
+            else if (isDraging && selectedShapeInd > -1)
+            {
+                Point tlp = shapes[selectedShapeInd].TopLeftPoint, brp = shapes[selectedShapeInd].BottomRightPoint;
+                tlp.Offset(end.X - start.X, end.Y - start.Y); brp.Offset(end.X - start.X, end.Y - start.Y);
+                curShape.TopLeftPoint = tlp;
+                curShape.BottomRightPoint = brp;
+                Invalidate();
             }
         }
 
@@ -97,6 +118,15 @@ namespace Paint
                 {
                     AddNewShape();
                 }
+            }
+            else if (isMoving && isDraging && selectedShapeInd > -1)
+            {
+                isDraging = false;
+                Point tlp = shapes[selectedShapeInd].TopLeftPoint, brp = shapes[selectedShapeInd].BottomRightPoint;
+                tlp.Offset(end.X - start.X, end.Y - start.Y); brp.Offset(end.X - start.X, end.Y - start.Y);
+                shapes[selectedShapeInd].TopLeftPoint = tlp;
+                shapes[selectedShapeInd].BottomRightPoint = brp;
+                Invalidate();
             }
         }
 
@@ -129,12 +159,22 @@ namespace Paint
             curShape.OutlinePen = curPen;
         }
 
-        private void MoveSelectedShape(Point currentLocation)
-        {
-        }
 
-        private void StopDragging()
+        private void SelectShape(Point point)
         {
+            for (int i = 0; i < shapes.Count; i++)
+            {
+                if (shapes[i].ContainsPoint(point))
+                {
+                    selectedShapeInd = i;
+                    curShape = new Rectangle(shapes[i].TopLeftPoint, shapes[i].BottomRightPoint);
+                    curBrush = new SolidBrush(Color.Transparent);
+                    curPen = new Pen(Color.DarkGray, 5);
+                    curPen.DashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
+                    curShape.FillBrush = curBrush;
+                    curShape.OutlinePen = curPen;
+                }
+            }
         }
     }
 }

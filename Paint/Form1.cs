@@ -10,11 +10,11 @@ namespace Paint
         private ToolStripButton btnCircle;
         private ToolStripButton btnRectangle;
         private ToolStripButton btnLine;
+        private ToolStripButton btnMove;
 
         private Color currentInColor = Color.Black;
         private Color currentOutColor = Color.Black;
-        private Color[] colors = new Color[] {
-                Color.Red, Color.Blue, Color.Green, Color.Black, Color.White,
+        private Color[] colors = {Color.Red, Color.Blue, Color.Green, Color.Black, Color.White,
                 Color.Yellow, Color.Purple, Color.Gray, Color.Silver, Color.Brown};
 
         public Form1()
@@ -39,6 +39,10 @@ namespace Paint
             btnLine.Click += BtnLine_Click;
             ts.Items.Add(btnLine);
 
+            btnMove = new ToolStripButton("Передвижение");
+            btnMove.Click += BtnMove_Click;
+            ts.Items.Add(btnMove);
+
             inColorPickerBtn = new ToolStripButton(GetColorSample(currentInColor));
             inColorPickerBtn.DisplayStyle = ToolStripItemDisplayStyle.Image;
             inColorPickerBtn.Click += (s, e) => ShowPalette(inColorPickerBtn, ref currentInColor);
@@ -58,6 +62,8 @@ namespace Paint
 
         void BtnCircle_Click(object sender, EventArgs e)
         {
+            ColorUpldate();
+            customCanvas.SetMoving(false);
             customCanvas.ChooseShape(CustomCanvas.ActiveShapeType.Circle);
             BtnUpdate();
             btnCircle.Checked = true;
@@ -65,6 +71,8 @@ namespace Paint
 
         void BtnRectangle_Click(object sender, EventArgs e)
         {
+            ColorUpldate();
+            customCanvas.SetMoving(false);
             customCanvas.ChooseShape(CustomCanvas.ActiveShapeType.Rectangle);
             BtnUpdate();
             btnRectangle.Checked = true;
@@ -72,9 +80,18 @@ namespace Paint
 
         void BtnLine_Click(object sender, EventArgs e)
         {
+            ColorUpldate();
+            customCanvas.SetMoving(false);
             customCanvas.ChooseShape(CustomCanvas.ActiveShapeType.Line);
             BtnUpdate();
             btnLine.Checked = true;
+        }
+
+        void BtnMove_Click(object sender, EventArgs e)
+        {
+            customCanvas.SetMoving(true);
+            BtnUpdate();
+            btnMove.Checked = true;
         }
 
         private void ShowPalette(ToolStripButton button, ref Color targetColor)
@@ -101,14 +118,12 @@ namespace Paint
             if (button == inColorPickerBtn)
             {
                 currentInColor = selectedColor;
-                customCanvas.ChooseInColor(selectedColor);
             }
             else if (button == outColorPickerBtn)
             {
                 currentOutColor = selectedColor;
-                customCanvas.ChooseOutColor(selectedColor);
             }
-
+            ColorUpldate();
             button.Image = GetColorSample(selectedColor);
         }
         private Image GetColorSample(Color color)
@@ -121,6 +136,12 @@ namespace Paint
             return bmp;
         }
 
+
+        private void ColorUpldate()
+        {
+            customCanvas.ChooseInColor(currentInColor);
+            customCanvas.ChooseOutColor(currentOutColor);
+        }
 
         void BtnUpdate()
         {
